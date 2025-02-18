@@ -170,12 +170,7 @@ print(os.path.dirname(os.path.realpath(sys.argv[0])))
 base_dir = os.path.dirname(os.path.realpath(sys.argv[0]))#os.path.dirname(os.path.abspath(sys.executable))
 model_path = os.path.join(base_dir, './weights/model1.pth')
 
-with open(model_path, 'rb') as f:
-    encrypted_weights = f.read()  # 读取剩余部分的加密权重
-
-state_dict = sun(encrypted_weights)
-
-# state_dict = torch.load(model_path, map_location=cuda)['model']
+state_dict = torch.load(model_path, map_location=cuda)['model']
 model.load_state_dict(state_dict)
 model = model.to(cuda)
 
