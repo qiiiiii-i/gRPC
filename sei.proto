@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package sei;
+option  csharp_namespace = "SEI.Proto";
+
+////////////////////////////////////////////////////////////
+// 命名规范
+// 1. 消息类型、枚举类型、服务类型以及接口名称采用单词首字母大写（大驼峰）命名方式，如：CommonResult
+// 2. 枚举字段采用全大写加下划线分隔命名方式，枚举字段前一般加枚举类型单词首字母大写前缀，如：ChannelWorkMode.CWM_FIXED
+// 3. 消息字段采用全小写加下划线分隔命名方式，如：collect_size
+// 4. 对于较复杂的接口参数类型建议采用Req后缀，表示请求消息（Request）
+// 5. 对于较复杂的接口返回类型（含流）建议采用Res后缀，表示应答消息（Response）
+// 6. 应答消息必须包含Result字段，作为接口执行状态的统一指示
+
+// 识别参数
+message IdenParam {
+    double               sample_rate        = 2;     // 采样率 Hz
+    double               band_width         = 3;     // 带宽 Hz
+    double               symbol_rate        = 4;     // 符号速率 Bd
+    double               center_freq        = 5;     // 信号频偏 Hz
+    string               file_path          = 6;     // 文件路径，默认为wav双通道16bit短整型格式
+}
+
+// 识别结果
+message IdenResult {
+    int32           code    = 1;    // 执行结果代码，0表示成功，其他表示失败（详细代码根据实际需求确定）
+    string          message = 2;    // 执行结果的消息字段，一般用于说明执行成功或出错的原因
+    string          object  = 3;    // 识别结果，表示识别目标
+}
+
+// 识别请求
+message IdenReq {
+    repeated IdenParam   params            = 1;     // 识别参数，支持批量识别
+}
+
+// 识别返回
+message IdenRes {
+    repeated IdenResult  results           = 1;     // 识别结果，和IdenReq中的params一一对应
+}
+
+
+// 识别服务
+service IdenService {
+
+    // 个体识别
+    rpc Identify(IdenReq) returns(IdenRes);
+
+}
