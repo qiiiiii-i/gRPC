@@ -44,6 +44,44 @@ pip install grpcio-tools
     python -m grpc_tools.protoc --proto_path=proto --python_out=. --grpc_python_out=. proto/sei.proto
     ```
     此命令会生成`sei_pb2.py`和`sei_pb2_grpc.py`文件，用于客户端和服务端的实现。  
+- 根据需求编写`proto`文件  
+    - 创建`.proto`文件
+    - 定义语法版本，常见的是`proto3`
+        ```proto
+        syntax = "proto3";
+        ```
+    - 定义客户端消息类型，每个消息字段都要指定类型和字段编号（唯一），代表从客户端得到的消息，其中repeated代表将IdenParam嵌套在IdenReq中并可重复，支持批量处理消息
+        ```proto
+        message IdenParam {
+            double               sample_rate        = 2;     // 采样率 Hz
+            double               band_width         = 3;     // 带宽 Hz
+            double               symbol_rate        = 4;     // 符号速率 Bd
+            double               center_freq        = 5;     // 信号频偏 Hz
+            string               file_path          = 6;     // 文件路径，默认为wav双通道16bit短整型格式
+       }
+       message IdenReq {
+           repeated IdenParam   params            = 1;     // 识别参数，支持批量识别
+       }
+        ```
+    - 定义服务端消息类型，代表服务端返回的结果
+        ```proto
+        message IdenResult {
+            int32           code    = 1;    // 执行结果代码，0表示成功，其他表示失败（详细代码根据实际需求确定）
+            string          message = 2;    // 执行结果的消息字段，一般用于说明执行成功或出错的原因
+            string          object  = 3;    // 识别结果，表示识别目标
+        }
+        message IdenRes {
+            repeated IdenResult  results           = 1;     // 识别结果，和IdenReq中的params一一对应
+        }
+        ```
+    - 定义服务接口（服务端和客户端都需要）
+       ```proto
+       service IdenService {
+          // 个体识别
+          rpc Identify(IdenReq) returns(IdenRes);
+       }
+       ```
+    根据需求完成上述编写后，同样可以使用`grpcio-tools`生成`.py`文件用于客户端与服务端通信。
 ### 3、完善`sei.py`服务端代码
 - 本项目涉及模型的加载，确保将已经训练好的模型文件放在`/weights`目录下，将模型文件放在与`sei.py`文件同目录下，根据需求修改模型加载和推理部分即可。  
 - 服务端代码中，最关键的是设定监听端口，才能接收到从客户端发送的信息，相关代码如下：
